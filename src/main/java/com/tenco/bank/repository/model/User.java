@@ -23,4 +23,11 @@ public class User {
     private String password;
     private String fullname;
     private Timestamp createdAt;
+    private String uploadFileName; // 프로필 이미지 이름
+
+    public String setUpUserImage(){
+        return uploadFileName == null ?
+                "https://picsum.photos/id/237/200/300"
+                : "images/uploads/" + uploadFileName;
+    }
 }
