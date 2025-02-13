@@ -1,6 +1,7 @@
 package com.tenco.bank.controller;
 
 
+
 import com.tenco.bank.dto.SignInDTO;
 import com.tenco.bank.dto.SignUpDTO;
 import com.tenco.bank.handler.exception.DataDeliveryException;
@@ -97,5 +98,6 @@ public class UserController {
 
         return "redirect:/account/list";
     }
+
 
 }

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @RequiredArgsConstructor // 리콰이얼드 아그스 컨스트럭쳐
 public class UserService{
@@ -25,6 +26,7 @@ public class UserService{
 //    public UserService(UserRepository userRepository) {
 //        this.userRepository = userRepository;
 //    }
+
 
     // 회원 가입 처리
     // 예외 처리
