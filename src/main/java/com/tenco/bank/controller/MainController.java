@@ -20,16 +20,10 @@ public class MainController {
 	@GetMapping({"/main-page", "/index", "/"})
 	// @ResponseBody
 	public String mainPage() {
-	 // throw new DataDeliveryException("메시지가 몰라? ", HttpStatus.UNAUTHORIZED);
-	 throw new RedirectException("메시지가 몰라? ", HttpStatus.UNAUTHORIZED);
-		// System.out.println("🔴 mainPage() 호출 확인");
-		// [JSP 파일 찾기 (yml 설정) ] - 뷰 리졸버 
-		// prefix: /WEB-INF/view
-		//         /main  
-		// suffix: .jsp
 
-		// /WEB-INF/view/main/.jsp
-		// return "/main";
+
+
+		return "/main";
 	}
 	
 

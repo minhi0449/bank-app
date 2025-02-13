@@ -2,10 +2,12 @@ package com.tenco.bank.repository.model;
 
 import java.sql.Timestamp;
 
+import com.tenco.bank.handler.exception.DataDeliveryException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 /*
     날짜 : 2025.02.12 (수)
@@ -41,7 +43,32 @@ public class Account {
 
     // TODO - 추후 추가
     // 패스워드 체크 기능
-    // 잔액 여부 확인 기능
-    // 계좌 소유자 확인 기능
+    public boolean checkPassword(String password) {
+        boolean isOk = true;
+        if (this.password.equals(password) == false) {
+            // 사용자한테 비밀번호 틀렸어요
+            isOk = false;
+            throw new DataDeliveryException("계좌 비밀번호가 틀렸어요.", HttpStatus.BAD_REQUEST);
+        }
+        return isOk;
+    }
 
+    // 잔액 여부 확인 기능
+    public void checkBalance(Long amount){
+        if(this.balance < amount){
+            // 내 잔액보다 더 많은 금액을 출금 하려고 하면 global 거기로 exception 으로 던져 버려서 리턴이 필요없음
+            throw new DataDeliveryException("잔액이 부족합니다.", HttpStatus.BAD_REQUEST);
+
+        }
+    }
+
+
+
+    // 계좌 소유자 확인 기능
+    public void checkOwner(Integer pricipalId){
+        if(this.userId != pricipalId){
+            throw new DataDeliveryException("본인 계좌가 아닙니다.                         ", HttpStatus.BAD_REQUEST);
+
+        }
+    }
 }
