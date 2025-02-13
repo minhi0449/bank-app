@@ -30,6 +30,7 @@
 				</button>
 				<div class="collapse navbar-collapse" id="collapsibleNavbar">
 					<ul class="navbar-nav">
+						<%-- 자바 코드가 돌아가는 거 if 문 같은 거 <c:choose> --%>
 						<c:choose>
 							<c:when test="${principal != null}">
 								<%-- 사용자가 로그인 상태  --%>
@@ -53,7 +54,7 @@
 						<!-- start of 코드 수정  -->
 						<!-- 1. 로그인 유무 확인  -->
 						<c:choose>
-							<c:when test="${principal != nul }">
+							<c:when test="${principal != null }">
 								<img class="m--profile" alt="" src="${principal.setUpUserImage()}">
 							</c:when>
 							<c:otherwise>

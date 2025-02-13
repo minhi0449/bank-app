@@ -1,7 +1,6 @@
 package com.tenco.bank.controller;
 
 
-
 import com.tenco.bank.dto.SignInDTO;
 import com.tenco.bank.dto.SignUpDTO;
 import com.tenco.bank.handler.exception.DataDeliveryException;
@@ -60,6 +59,7 @@ public class UserController {
         }
         userService.createUser(dto);
         // todo 로그인 페이지로 변경 예정
+        // todo /account/list 경로로 변경해야 함
         return "redirect:/user/sign-in";
     }
 
@@ -98,6 +98,14 @@ public class UserController {
 
         return "redirect:/account/list";
     }
+
+    // 로그아웃
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/user/sign-in"; // redirect 는 주소를 부르는 건뎅.. 이 바보 멍청아
+    }
+
 
 
 }
