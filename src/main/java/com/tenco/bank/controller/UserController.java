@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller // IoC 대상 --> 보통 HTEML 렌더링(자바코드) ---> 클라이언트 응답
+@Controller // IoC 대상 --> 보통 HTML 렌더링(자바코드) ---> 클라이언트 응답
 @RequiredArgsConstructor
 @RequestMapping("/user")
 public class UserController {
