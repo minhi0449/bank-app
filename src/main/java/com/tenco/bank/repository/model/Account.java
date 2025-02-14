@@ -1,6 +1,7 @@
 package com.tenco.bank.repository.model;
 
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 
 import com.tenco.bank.handler.exception.DataDeliveryException;
 import lombok.AllArgsConstructor;
@@ -60,15 +61,25 @@ public class Account {
             throw new DataDeliveryException("잔액이 부족합니다.", HttpStatus.BAD_REQUEST);
 
         }
+        // this.balance -= amount; // 복합 대입 연산자 --> 근데 굳이 적지 마셈 // 출금 기능에서 사용
+
     }
 
 
 
     // 계좌 소유자 확인 기능
-    public void checkOwner(Integer pricipalId){
-        if(this.userId != pricipalId){
-            throw new DataDeliveryException("본인 계좌가 아닙니다.                         ", HttpStatus.BAD_REQUEST);
+    public void checkOwner(Integer principalId){
+        if(this.userId != principalId){
+            throw new DataDeliveryException("본인 계좌가 아닙니다.", HttpStatus.BAD_REQUEST);
 
         }
     }
+
+    // 화폐 형식으로 전환
+    public String formatKoreanWon(Long amount){
+        DecimalFormat formatter = new DecimalFormat("#,###원");
+        return formatter.format(amount);
+    }
+
+
 }
