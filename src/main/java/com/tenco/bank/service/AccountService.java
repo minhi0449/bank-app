@@ -1,6 +1,7 @@
 package com.tenco.bank.service;
 
 import com.tenco.bank.dto.DepositDTO;
+import com.tenco.bank.dto.TransferDTO;
 import com.tenco.bank.dto.WithdrawalDTO;
 import com.tenco.bank.repository.interfaces.HistoryRepository;
 import com.tenco.bank.repository.model.Account;
@@ -120,7 +121,7 @@ public class AccountService {
         history.setDAccountId(null); // 입금 Id 는 null
         // 히스토리 레파지토리 필요
         int rowResetCount = historyRepository.insert(history);
-        System.out.println("111111 : " + rowResetCount);
+        // System.out.println("111111 : " + rowResetCount);
         if(rowResetCount != 1){
             throw new DataDeliveryException(Define.FAILED_PROCESSING, HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -144,7 +145,7 @@ public class AccountService {
 
         // 3. 본인 계좌 여부 확인
         account.checkOwner(principalId); // principalId : 계좌 소유자 Id
-        // ** 비밀번호 필요 ❌ **
+        // ** 비밀번호 필요  **
 
         // 4. 입금 처리 (update)
         account.deposit(dto.getAmount()); // 금액 +
@@ -170,4 +171,92 @@ public class AccountService {
                     HttpStatus.INTERNAL_SERVER_ERROR); // INTERNAL_SERVER_ERROR (= 500 내부 서버 오류)
         }
     } // end of updateAccountDeposit
+
+
+
+    /**
+     * 이체 기능 처리
+     * @param dto
+     * @param principalId
+     */
+    // 1. 트랜잭션 처리
+    // 2. 출금 계좌 존재 여부 확인 --> select
+    // 3. 출금 계좌 본인 소유 여부 확인 --> 객체 상태 값 에서 확인할 수 있고,
+    // -. 입금 계좌 존재 여부 확인 --> select (헷갈려서 아래로 내려감)
+    // 4. 출금 계좌 비밀번호 확인 --> 객체 상태 값
+    // 5. 출금 잔액 여부 확인 --> 객체 상태 값 (잔액 보다 초과된 금액 이체 불가)
+    // 6. 입금 계좌 존재 여부 확인 --> select
+    // 7. 출금 계좌 잔액 수정 --> 객체 상태 값
+    // 8. 출금 계좌 잔액 수정 --> update 쿼리문 때려야 함 -> 아야,,
+    // 9. 입금 계좌 객체 상태 변경 --> 객체 상태 값
+    // 10. 입금 계좌 잔액 변경 --> update
+    // 11. 거래 내역 등록 처리
+    @Transactional
+    public void updateAccountTransfer(TransferDTO dto, Integer principalId) {
+//        // 1. 출금 계좌 존재 여부
+//        Account account = accountRepository.findByNumber(dto.getWAccountNumber());
+//        // 1.2 계좌 번호가 없는 상황이라면 예외던지기
+//        if(account == null){
+//            throw new DataDeliveryException(Define.NOT_EXIST_ACCOUNT, HttpStatus.BAD_REQUEST);
+//        }
+//        // 2. 출금 계좌 본인 소유 여부 확인
+//        account.checkOwner(principalId);
+//        // 3. 출금 계좌 비밀번호 확인
+//        account.checkPassword(dto.getPassword());
+//        // 4. 출금 잔액 여부 확인
+//        account.checkBalance(dto.getAmount());
+//        // 5. 입금 계좌 존재 여부 확인
+//        //account.checkOwner(dto.getDAccountNumber());
+        ///////////////////////////////////////////////////////////////////
+
+
+        Account withdrawAccount = accountRepository.findByNumber(dto.getWAccountNumber());
+        // 2. 출금 계좌 존재 여부 확인 --> select
+        if (withdrawAccount == null){
+            throw new DataDeliveryException(Define.NOT_EXIST_ACCOUNT, HttpStatus.BAD_REQUEST);
+        }
+        // 3. 출금 계좌 본인 소유 여부 확인 --> 객체 상태 값 에서 확인할 수 있고,
+        withdrawAccount.checkOwner(principalId);
+
+        // 4. 출금 계좌 비밀번호 확인 --> 객체 상태 값
+        withdrawAccount.checkPassword(dto.getPassword());
+
+        // 5. 출금 잔액 여부 확인 --> 객체 상태 값 (잔액 보다 초과된 금액 이체 불가)
+        withdrawAccount.checkBalance(dto.getAmount());
+
+        // 6. 입금 계좌 존재 여부 확인 --> select
+        Account depositAccount = accountRepository.findByNumber(dto.getDAccountNumber());
+        if(depositAccount == null){
+            throw new DataDeliveryException("상대방의 계좌 번호가 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // 7. 출금 계좌 잔액 수정 --> 객체 상태 값 변경
+        withdrawAccount.withdraw(dto.getAmount());
+
+        // 8. 출금 계좌 잔액 수정 --> update 쿼리문 때려야 함 -> 아야,,
+        accountRepository.updateById(withdrawAccount);
+
+        // 9. 입금 계좌 객체 상태 변경 --> 객체 상태 값
+        depositAccount.deposit(dto.getAmount());
+
+        // 10. 입금 계좌 잔액 변경 --> update
+        accountRepository.updateById(depositAccount); // depositAccount 상태값을 넣으면 상태 값 변경 됨
+
+        // 11. 거래 내역 등록 처리
+        // 전체 내역이 다 들어가야 하기 때문에 History 객체 만들어야 함
+        History history = History.builder()
+                .amount(dto.getAmount()) // 이체 금액
+                .wAccountId(withdrawAccount.getId()) // 출금 계좌 PK
+                .dAccountId(depositAccount.getId()) // 입금 계좌 PK
+                .wBalance(withdrawAccount.getBalance()) // 출금 계죄 잔액 (그 시점)
+                .dBalance(depositAccount.getBalance()) // 입금 계좌 잔액 (그 시점)
+                .build();
+
+        int resultRowCount = historyRepository.insert(history);
+
+        if(resultRowCount != 1){
+            throw new DataDeliveryException(Define.FAILED_PROCESSING, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
 }
