@@ -1,6 +1,9 @@
 package com.tenco.bank.repository.interfaces;
 
 import java.util.List;
+
+import com.tenco.bank.dto.HistoryAccountDTO;
+import com.tenco.bank.repository.model.History;
 import org.apache.ibatis.annotations.Mapper;
 import com.tenco.bank.repository.model.Account;
 import org.apache.ibatis.annotations.Param;
@@ -29,4 +32,10 @@ public interface AccountRepository {
     // 2개 이상에 파라미터을 설계한다면 반드시 @Param 어노테이션을 지정해 주세요
     public List<Account> findAllByUserId(@Param("userId") Integer principalId);
 
+    // Account PK로 조회하는 기능 (단일 계좌 조회 기능)
+    public Account findByAccountId(Integer accountId);
+    public List<HistoryAccountDTO>
+    findByAccountIdAndTypeOfHistory(
+            @Param("type") String type,
+            @Param("accountId") Integer accountId );
 }

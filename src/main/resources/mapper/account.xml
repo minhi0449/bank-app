@@ -30,4 +30,12 @@
     <select id="findAllByUserId" resultType="com.tenco.bank.repository.model.Account">
         select * from account_tb where user_id = #{userId}
     </select>
+
+    <!--  단일 계좌 조회 기능  -->
+    <select id="findByAccountId" resultType="com.tenco.bank.repository.model.Account">
+        <!--  select 니까 결과 집합 받아야 함 -> resultType  -->
+        select * from account_tb where id = #{accountId}
+    </select>
+
+
 </mapper>
