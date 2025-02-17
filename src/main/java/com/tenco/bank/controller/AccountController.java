@@ -18,7 +18,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.Arrays;
+
 import java.util.HexFormat;
 import java.util.List;
 
@@ -245,7 +247,6 @@ public class AccountController {
     @PostMapping("/transfer")
     public String transferProc(TransferDTO dto){
         System.out.println("💳 안녕 여기 이체하기 toString" + dto.toString());
-
         // 인증 검사
         User principal = (User) session.getAttribute(Define.PRINCIPAL);
          // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
@@ -285,6 +286,7 @@ public class AccountController {
 
         return "redirect:/account/list";
     }
+
 
     // 계좌 상세보기 화면 요청
 
@@ -327,5 +329,6 @@ public class AccountController {
 
         return "/account/detail";
     }
+
 
 }

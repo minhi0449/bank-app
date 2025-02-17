@@ -261,6 +261,7 @@ public class AccountService {
 
     }
 
+
     // 단일 계좌 조회 기능
 
     /**
@@ -286,4 +287,5 @@ public class AccountService {
     public void readHistoryByAccountId(String type, Integer accountId) {
 
     }
+
 }
