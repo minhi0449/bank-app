@@ -16,10 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
 
@@ -245,7 +244,7 @@ public class AccountController {
     // 출금 기능 처리하는
     @PostMapping("/transfer")
     public String transferProc(TransferDTO dto){
-        System.out.println("안녕 여기 이체하기 toString" + dto.toString());
+        System.out.println("💳 안녕 여기 이체하기 toString" + dto.toString());
 
         // 인증 검사
         User principal = (User) session.getAttribute(Define.PRINCIPAL);
@@ -287,5 +286,46 @@ public class AccountController {
         return "redirect:/account/list";
     }
 
+    // 계좌 상세보기 화면 요청
+
+    /**
+     * 계좌 상세보기 화면
+     * 주소 설계 : http://localhost:8080/account/detail/1
+     * type 설계 : http://localhost:8080/account/detail/1?type=all, deposit, withdraw
+     * @return
+     */
+    @GetMapping("/detail/{accountId}")
+    public String detailPage(@PathVariable(name = "accountId") Integer accountId,
+                            @RequestParam(required = false, name = "type") String type, Model model){
+        System.out.println("💰안녕 여기 - 계좌 상세 컨트롤러 : detailPage()");
+        // 인증 검사
+        User principal = (User) session.getAttribute(Define.PRINCIPAL);
+        // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
+        if(principal == null){ // null 이 아니라면 로그인 한 사용자
+            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
+                    HttpStatus.UNAUTHORIZED);
+        }
+
+        // 유효성 검사
+        List<String> vaildTypes = Arrays.asList("all", "deposit", "withdrawal");
+        if(!vaildTypes.contains(type)){
+            throw new DataDeliveryException("유효하지 않은 접근입니다.", HttpStatus.BAD_REQUEST);
+        } // 의도하지 않은 url 접근 시 -> 접근 못 하게 하는 유효성 검사
+
+        // 화면을 구성하기 위한 필요한 데이터
+        // 소유자 이름 -- account_tb (사용자 하나의 계좌번호가 필요)
+        // 해당 계좌 번호 -- account_tb
+        // 거래 내역 추출 -- history_tb
+        Account account = accountService.readAccountId(accountId);
+        // 동적 쿼리를 위해 type 을 먼저 만들어주고, accountId 를 던져 줄거임
+        // readHistoryByAccountId(type);
+        accountService.readHistoryByAccountId(type, accountId);
+
+        // view resolve (뷰 리졸브) --> jsp 데이터르 내려줄 때,
+        // Model
+        model.addAttribute("account", account);
+
+        return "/account/detail";
+    }
 
 }

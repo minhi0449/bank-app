@@ -26,7 +26,8 @@ import java.util.List;
   이름 : 김민희
   내용 : 계좌 생성을 위한 AccountService 설계
 
-  수정 : 2025.02.14 (금) - 김민희 : 입/출금 기능 추가
+  이력 : 2025.02.14 (금) - 김민희 : 입/출금 기능 추가
+        2025.02.17 (월) - 김민희 : 단일 계좌 조회 기능 추가
  */
 
 
@@ -257,6 +258,32 @@ public class AccountService {
         if(resultRowCount != 1){
             throw new DataDeliveryException(Define.FAILED_PROCESSING, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+    }
+
+    // 단일 계좌 조회 기능
+
+    /**
+     * 단일 계좌 조회 기능
+     * select 부분은 트랜잭션 안 걸기로 함
+     * @param accountId
+     * @return
+     */
+    public Account readAccountId(Integer accountId){
+        Account account = accountRepository.findByAccountId(accountId);
+        if(accountId == null){
+            throw new DataDeliveryException(Define.NOT_EXIST_ACCOUNT, HttpStatus.BAD_REQUEST);
+        }
+        return account;
+    }
+
+    /**
+     * 단일 계좌 거래 내역 조회
+     * @param type [all, deposit, withdraw]
+     * @param accountId (pk)
+     * @return 입금, 출금, 입출금 거래내역 (3가지 타입으로 반환 처리)
+     */
+    public void readHistoryByAccountId(String type, Integer accountId) {
 
     }
 }
