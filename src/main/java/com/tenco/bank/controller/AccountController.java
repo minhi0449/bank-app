@@ -2,6 +2,7 @@ package com.tenco.bank.controller;
 
 import com.tenco.bank.dto.AccountSaveDTO;
 import com.tenco.bank.dto.DepositDTO;
+import com.tenco.bank.dto.TransferDTO;
 import com.tenco.bank.dto.WithdrawalDTO;
 import com.tenco.bank.handler.exception.DataDeliveryException;
 import com.tenco.bank.handler.exception.UnAuthorizedException;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -225,6 +227,65 @@ public class AccountController {
 
     }
 
+
+
+    // 이체 기능 화면 요청
+    @GetMapping("/transfer")
+    public String transgerPage(){
+        // 인증 검사
+        User principal = (User) session.getAttribute(Define.PRINCIPAL);
+        // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
+//        if(principal == null){ // null 이 아니라면 로그인 한 사용자
+//            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
+//                    HttpStatus.UNAUTHORIZED);
+//        }
+        return "/account/transfer";
+    }
+
+    // 출금 기능 처리하는
+    @PostMapping("/transfer")
+    public String transferProc(TransferDTO dto){
+        System.out.println("안녕 여기 이체하기 toString" + dto.toString());
+
+        // 인증 검사
+        User principal = (User) session.getAttribute(Define.PRINCIPAL);
+         // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
+        if(principal == null){ // null 이 아니라면 로그인 한 사용자
+            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
+                    HttpStatus.UNAUTHORIZED);
+        }
+
+
+        // 유효성 검사
+        if(dto.getAmount() == null){
+            throw new DataDeliveryException(Define.ENTER_YOUR_BALANCE, HttpStatus.BAD_REQUEST);
+        }
+        if(dto.getAmount() < 0){ // 출금 금액 0일 떄,
+            throw new DataDeliveryException(Define.ENTER_YOUR_BALANCE, HttpStatus.BAD_REQUEST);
+        }
+
+        // 3. 출금 계좌번호 입력 여부 확인
+        if(dto.getWAccountNumber() == null || dto.getWAccountNumber().isEmpty()){
+            throw new DataDeliveryException("출금 계좌 번호를 입력하시오", HttpStatus.BAD_REQUEST);
+        }
+
+        // 4. 출금 계좌 비밀번호 입력 여부 확인
+        // 5. 입금 계좌 입력 여부 확인
+        if(dto.getDAccountNumber() == null || dto.getDAccountNumber().isEmpty()){
+            throw new DataDeliveryException("입금 계좌 번호를 입력하시오", HttpStatus.BAD_REQUEST);
+        }
+        // 6. 같은 계좌 입력인지 확인 (출금 = 입금 계좌 번호가 같으면 안되니까 !)
+        // if(dto.getWAccountNumber() == dto.getDAccountNumber()){ 문자열 타입 인데 == 으로 비교해서 실수한 부분
+        if(dto.getWAccountNumber().equals(dto.getDAccountNumber())){ // 문자열은 .equals 로 비교해야 함
+            throw new DataDeliveryException("같은 계좌로 이체할 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // 서비스 호출
+        accountService.updateAccountTransfer(dto, principal.getId());
+        // 본인의 계좌에서 출금한 게 맞는지 알아야 하니까 -> 유저 아이디 들어가야 함
+
+        return "redirect:/account/list";
+    }
 
 
 }
