@@ -23,6 +23,8 @@ import java.util.List;
  * 날짜 : 2025.02.13 (목)
  * 이름 : 김민희
  * 내용 :
+ *
+ * 이력 : 2025.02.18 (화) - 페이징 처리
  */
 
 @RequestMapping("/account")
@@ -293,7 +295,10 @@ public class AccountController {
      */
     @GetMapping("/detail/{accountId}")
     public String detailPage(@PathVariable(name = "accountId") Integer accountId,
-                            @RequestParam(required = false, name = "type") String type, Model model){
+                            @RequestParam(required = false, name = "type") String type,
+                             @RequestParam(name="page", defaultValue = "1") int page,
+                             @RequestParam(name="size", defaultValue = "2") int size, // 한 페이지에 몇 개씩 보고자 하는 거
+                             Model model){
         System.out.println("💰안녕 여기 - 계좌 상세 컨트롤러 : detailPage()");
         // 인증 검사
         User principal = (User) session.getAttribute(Define.PRINCIPAL);
@@ -302,6 +307,16 @@ public class AccountController {
             throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
                     HttpStatus.UNAUTHORIZED);
         }
+
+        // 페이지 처리를 하기 위한 데이터
+        // 전체 레코드 수가 필요하다. 히스토리 이력이 10
+        // 한 페이지당 보여줄 객수는 1라고 가정 한다면
+        // 10개 페이지가 생성된다. ---> 5페이지(2개씩 보여줄 경우) [3 3 3 1 (만약 3개씩 보여줄 경우)]
+        // 전체 레코드 수를 가져와야 하고,
+        // 토탈 페이지 수를 계산 해야 한다.
+        int totalRecords = accountService.countHistoryByAccountAndType(type, accountId);
+        // 설정에 맞는 전체 페이지 수를 계산해야 한다.
+        int totalPage = 0; // paging 을 계산하는 수식이 들어옴
 
         // 유효성 검사
         List<String> vaildTypes = Arrays.asList("all", "deposit", "withdrawal");

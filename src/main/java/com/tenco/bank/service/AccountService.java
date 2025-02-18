@@ -289,4 +289,16 @@ public class AccountService {
 
         return list;
     }
+
+    /**
+     * 페이징 처리 하는 메서드
+     * 단일 해당 계좌와 거래 유형에 따른 전체 레코드 수를 반환하는 메서드
+     * @param type
+     * @param accountId
+     * @return int
+     */
+    public int countHistoryByAccountAndType(String type, Integer accountId) {
+
+        return historyRepository.countHistoryAccountIdAndType(type, accountId);
+    }
 }

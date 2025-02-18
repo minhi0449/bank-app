@@ -30,4 +30,8 @@ public interface HistoryRepository {
     findByAccountIdAndTypeOfHistory(
             @Param("type") String type,
             @Param("accountId") Integer accountId );
+
+    // Map, 객체, 원시 타입으로 선언하는 방법이 있다.
+    public int countHistoryAccountIdAndType(@Param("type") String type,
+                                            @Param("accountId") Integer accountId);
 }
