@@ -18,6 +18,7 @@ public class GlobalControllerAdvice {
     @ExceptionHandler({Exception.class}) // 모든 예외처리의 최상위
     public void exception(Exception e){
         System.out.println("---------------------");
+        System.out.println("33333"+e.toString());
         System.out.println(e.getClass().getName());
         System.out.println(e.getMessage());
         System.out.println("---------------------");

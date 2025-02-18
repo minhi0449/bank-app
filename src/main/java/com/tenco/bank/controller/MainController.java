@@ -17,11 +17,9 @@ public class MainController {
 	// 	// http:localhost:8080/main-page
 	// 주소설계
 	// http:localhost:8080/main-page
-	@GetMapping({"/main-page", "/index", "/"})
+	@GetMapping({"/main-page", "/index"})
 	// @ResponseBody
 	public String mainPage() {
-
-
 
 		return "/main";
 	}

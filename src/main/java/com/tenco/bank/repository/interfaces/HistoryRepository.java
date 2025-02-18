@@ -14,6 +14,7 @@ import org.apache.ibatis.annotations.Param;
  */
 
 // 거래내역 관리
+
 @Mapper
 public interface HistoryRepository {
 
@@ -35,5 +36,8 @@ public interface HistoryRepository {
 
     // Map, 객체, 원시 타입으로 선언하는 방법이 있다.
     public int countHistoryAccountIdAndType(@Param("type") String type,
-                                            @Param("accountId") Integer accountId);
+                                            @Param("accountId") Integer accountId,
+                                            @Param("limit") int limit,
+                                            @Param("offset") int offset);
+
 }

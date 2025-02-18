@@ -9,6 +9,7 @@ import com.tenco.bank.service.UserService;
 import com.tenco.bank.utils.Define;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+@Log4j2
 @Controller // IoC 대상 --> 보통 HTML 렌더링(자바코드) ---> 클라이언트 응답
 @RequiredArgsConstructor // 리콰이얼드 아그스 컨스트럭쳐
 @RequestMapping("/user")
@@ -69,6 +71,7 @@ public class UserController {
      */
     @GetMapping("/sign-in")
     public String singInPage() {
+        log.info("🍎로그인 ");
         return "/user/signIn";
     }
 
