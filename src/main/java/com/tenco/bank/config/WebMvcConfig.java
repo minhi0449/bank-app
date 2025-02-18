@@ -26,13 +26,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final AuthInterceptor authInterceptor; // 멤버변수로 선언
 
 
-//    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(authInterceptor)
-//                .addPathPatterns("/account/**") // 이거 아래에서 모두 동작해줘 bro
-//                .addPathPatterns("/auth/**");
-//
-//    }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authInterceptor)
+                .addPathPatterns("/account/**") // 이거 아래에서 모두 동작해줘 bro
+                .addPathPatterns("/auth/**");
+
+    }
 
 
 
