@@ -1,8 +1,6 @@
 package com.tenco.bank.service;
 
-import com.tenco.bank.dto.DepositDTO;
-import com.tenco.bank.dto.TransferDTO;
-import com.tenco.bank.dto.WithdrawalDTO;
+import com.tenco.bank.dto.*;
 import com.tenco.bank.repository.interfaces.HistoryRepository;
 import com.tenco.bank.repository.model.Account;
 import com.tenco.bank.repository.model.History;
@@ -14,11 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tenco.bank.dto.AccountSaveDTO;
 import com.tenco.bank.handler.exception.DataDeliveryException;
 import com.tenco.bank.handler.exception.RedirectException;
 import com.tenco.bank.repository.interfaces.AccountRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -283,7 +281,12 @@ public class AccountService {
      * @param accountId (pk)
      * @return 입금, 출금, 입출금 거래내역 (3가지 타입으로 반환 처리)
      */
-    public void readHistoryByAccountId(String type, Integer accountId) {
+    public List<HistoryAccountDTO> readHistoryByAccountId(String type, Integer accountId) {
+        // 지역 변수 선언
+        List<HistoryAccountDTO> list = new ArrayList<>();// 자료 구조 부터 만들게욧@!
+        // 1단계 limit , offset 몇 개까지 나와라, 어디서 부터 어디까지
+        list = historyRepository.findByAccountIdAndTypeOfHistory(type, accountId); // 페이징 처리 없이 전체 페이지 들고 오는 거
 
+        return list;
     }
 }

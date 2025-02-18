@@ -37,5 +37,4 @@
         select * from account_tb where id = #{accountId}
     </select>
 
-
 </mapper>

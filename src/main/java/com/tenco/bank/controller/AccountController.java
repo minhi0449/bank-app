@@ -1,9 +1,6 @@
 package com.tenco.bank.controller;
 
-import com.tenco.bank.dto.AccountSaveDTO;
-import com.tenco.bank.dto.DepositDTO;
-import com.tenco.bank.dto.TransferDTO;
-import com.tenco.bank.dto.WithdrawalDTO;
+import com.tenco.bank.dto.*;
 import com.tenco.bank.handler.exception.DataDeliveryException;
 import com.tenco.bank.handler.exception.UnAuthorizedException;
 import com.tenco.bank.repository.model.Account;
@@ -319,11 +316,13 @@ public class AccountController {
         Account account = accountService.readAccountId(accountId);
         // 동적 쿼리를 위해 type 을 먼저 만들어주고, accountId 를 던져 줄거임
         // readHistoryByAccountId(type);
-        accountService.readHistoryByAccountId(type, accountId);
+        // 데이터 타입 역시나 List
+        List<HistoryAccountDTO> historyList = accountService.readHistoryByAccountId(type, accountId);
 
-        // view resolve (뷰 리졸브) --> jsp 데이터르 내려줄 때,
+        // view resolve (뷰 리졸브) --> jsp 데이터를 내려줄 때,
         // Model
         model.addAttribute("account", account);
+        model.addAttribute("historyList", historyList);
 
         return "/account/detail";
     }
