@@ -56,6 +56,8 @@
             LEFT JOIN account_tb AS da ON h.d_account_id = da.id
             LEFT JOIN account_tb AS wa ON h.w_account_id = wa.id
             WHERE h.d_account_id = #{accountId} OR h.w_account_id = #{accountId}
+            LIMIT #{limit} OFFSET #{offset}
+
         </if>
         <if test="type == 'withdrawal'">
             SELECT
@@ -66,6 +68,8 @@
             LEFT JOIN account_tb AS wa ON wa.id = h.w_account_id
             LEFT JOIN account_tb AS da ON da.id = h.d_account_id
             WHERE h.w_account_id = #{accountId}
+            LIMIT #{limit} OFFSET #{offset}
+
         </if>
         <if test="type == 'deposit'">
             SELECT
@@ -81,14 +85,13 @@
         </if>
     </select>
 
-    <select id="countHistoryAccountIdAndType" resultType="com.tenco.bank.dto.HistoryAccountDTO">
+    <select id="countHistoryAccountIdAndType" resultType="int">
         <if test="type == 'all'">
             SELECT count(*)
             FROM  history_tb AS h
             LEFT JOIN account_tb AS da ON h.d_account_id = da.id
             LEFT JOIN account_tb AS wa ON h.w_account_id = wa.id
             WHERE h.d_account_id = #{accountId} OR h.w_account_id = #{accountId}
-            LIMIT #{limit} OFFSET #{offset}
 
         </if>
         <if test="type == 'withdrawal'">
@@ -97,8 +100,6 @@
             LEFT JOIN account_tb AS wa ON wa.id = h.w_account_id
             LEFT JOIN account_tb AS da ON da.id = h.d_account_id
             WHERE h.w_account_id = #{accountId}
-            LIMIT #{limit} OFFSET #{offset}
-
         </if>
         <if test="type == 'deposit'">
             SELECT count(*)
@@ -106,8 +107,6 @@
             LEFT JOIN  account_tb AS da ON da.id = h.d_account_id
             LEFT JOIN  account_tb AS wa ON wa.id = h.w_account_id
             WHERE h.d_account_id = #{accountId}
-            LIMIT #{limit} OFFSET #{offset}
-
         </if>
     </select>
 

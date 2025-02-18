@@ -7,6 +7,7 @@ import com.tenco.bank.repository.model.Account;
 import com.tenco.bank.repository.model.User;
 import com.tenco.bank.service.AccountService;
 import com.tenco.bank.utils.Define;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -16,10 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.Arrays;
-
-import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -35,9 +33,9 @@ import java.util.List;
 @Log4j2
 public class AccountController {
 
-    @Autowired
+    // @Autowired
     private final HttpSession session;
-    @Autowired
+    // @Autowired
     private final AccountService accountService;
 
     // 생성자 의존 주입 - DI 처리
@@ -45,16 +43,7 @@ public class AccountController {
         this.session = session;
         this.accountService = accountService;
     }
-    /**
-     * 계좌 목록 화면 요청
-     * 주소 : http://localhost:8080/account/list
-     * @param model
-     * @return list.jsp
-     */
-//    @GetMapping({"list", "/"})
-//    public String listPage(Model model) {
-//        return "/account/list";
-//    }
+
 
     // /account/save.jsp
     @GetMapping("/save")
@@ -77,15 +66,7 @@ public class AccountController {
 
     // 계좌 생성 기능
     @PostMapping("/save")
-    public String saveProc(AccountSaveDTO dto) {
-        // 유효성 검사보다 먼저 인증검사를 먼저 하는 것이 좋습니다.
-
-        // 1. 인증검사
-        User principal = (User)session.getAttribute("principal");
-        if(principal == null) {
-            throw new UnAuthorizedException("로그인 먼저 해주세요",
-                    HttpStatus.UNAUTHORIZED);
-        }
+    public String saveProc(AccountSaveDTO dto, @SessionAttribute(Define.PRINCIPAL) User principal) {
 
         // 2. 유효성 검사
         if(dto.getNumber() == null || dto.getNumber().isEmpty()) {
@@ -115,17 +96,12 @@ public class AccountController {
      * @param model - accountList
      * @return list.jsp
      */
-    @GetMapping({ "/list", "/" })
-    public String listPage(Model model) {
+    @GetMapping({ "/list"})
+    public String listPage(Model model, @SessionAttribute("principal") User principal) {
         log.info("🆗 여기가 계좌 목록 페이지 - listPage()");
-        // 1.인증 검사가 필요(account 전체 필요)
-        User principal = (User) session.getAttribute("principal");
-        if (principal == null) {
-            throw new UnAuthorizedException("인증된 사용자가 아닙니다", HttpStatus.UNAUTHORIZED);
-        }
 
         // 경우의 수 -> 유, 무
-        List<Account> accountList = accountService.readAccountListByUserId(principal.getId());
+        List<Account> accountList = accountService.readAccountListByUserId(1);
 
         if (accountList.isEmpty()) {
             model.addAttribute("accountList", null);
@@ -138,9 +114,8 @@ public class AccountController {
 
     // 출금하기
     @GetMapping("/withdrawal")
-    public String withdrawalPage(){
+    public String withdrawalPage(@SessionAttribute(Define.PRINCIPAL) User principal){
         log.info("여기는 출금하기 페이지 컨트롤러 오바 + withdrawalPage() ");
-        User principal = (User) session.getAttribute(Define.PRINCIPAL);
         // 매번 작성하기 좀 그러니까 인증 처리를 어디서 진행했는지 여쭤보셨음
         // filter 에서 진행해도 되고, 인터셉터에서 진행해도 됨
         if(principal == null){
@@ -152,14 +127,9 @@ public class AccountController {
 
     //
     @PostMapping("/withdrawal")
-    public String withdrawalProc(WithdrawalDTO dto) {
+    public String withdrawalProc(WithdrawalDTO dto, @SessionAttribute(Define.PRINCIPAL) User principal) {
         log.info("☢️ 호호 withdrawalProc() 컨트롤러 ");
-        User principal = (User) session.getAttribute(Define.PRINCIPAL);
-        if(principal == null) {
-            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN, HttpStatus.UNAUTHORIZED);
-        }
 
-        // 2. 유효성 검사
         // 유효성 검사
         if(dto.getAmount() == null) {
             throw new DataDeliveryException(Define.ENTER_YOUR_BALANCE,
@@ -189,27 +159,18 @@ public class AccountController {
 
     @GetMapping("/deposit")
     public String depositPage(){
-        // 1. 인증 검사
-        User principal = (User) session.getAttribute(Define.PRINCIPAL); // 다운 캐스팅
-        if (principal == null) {
-            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN, HttpStatus.UNAUTHORIZED);
-        }
+
         return "/account/deposit";
     }
 
     /**
      * 입금 기능 처리
-     * @param DepositDTO
+     * @param
      * @return 계좌 목록 페이지
      */
     @PostMapping("/deposit")
-    public String depositProc(DepositDTO dto) { // form 태그에서 왔던 거 여기서 받는 거고
-        // 1. 인증 검사
-        User principal = (User) session.getAttribute(Define.PRINCIPAL); // 다운 캐스팅
-        if (principal == null) {
-            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN, HttpStatus.UNAUTHORIZED);
-        }
-
+    public String depositProc(DepositDTO dto, @SessionAttribute(Define.PRINCIPAL) User principal) { // form 태그에서 왔던 거 여기서 받는 거고
+        // 1. @SessionAttribute(Define.PRINCIPAL) User principal -> 이녀석이 다운 캐스팅해서 꽂아줍니다.
         // 2. 유효성 검사
         if (dto.getAmount() == null) {
             throw new DataDeliveryException(Define.ENTER_YOUR_BALANCE, HttpStatus.BAD_REQUEST);
@@ -233,27 +194,13 @@ public class AccountController {
     // 이체 기능 화면 요청
     @GetMapping("/transfer")
     public String transgerPage(){
-        // 인증 검사
-        User principal = (User) session.getAttribute(Define.PRINCIPAL);
-        // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
-//        if(principal == null){ // null 이 아니라면 로그인 한 사용자
-//            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
-//                    HttpStatus.UNAUTHORIZED);
-//        }
         return "/account/transfer";
     }
 
     // 출금 기능 처리하는
     @PostMapping("/transfer")
-    public String transferProc(TransferDTO dto){
+    public String transferProc(TransferDTO dto, @SessionAttribute(Define.PRINCIPAL) User principal){
         System.out.println("💳 안녕 여기 이체하기 toString" + dto.toString());
-        // 인증 검사
-        User principal = (User) session.getAttribute(Define.PRINCIPAL);
-         // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
-        if(principal == null){ // null 이 아니라면 로그인 한 사용자
-            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
-                    HttpStatus.UNAUTHORIZED);
-        }
 
 
         // 유효성 검사
@@ -303,29 +250,10 @@ public class AccountController {
                              @RequestParam(name="size", defaultValue = "1") int size, // 한 페이지에 몇 개씩 보고자 하는 거
                              Model model){
         System.out.println("💰안녕 여기 - 계좌 상세 컨트롤러 : detailPage()");
-        // 인증 검사
-        User principal = (User) session.getAttribute(Define.PRINCIPAL);
-        // 테스트 할 때, 인증 검사를 해두지 않으면 바로 로그인 가능!
-        if(principal == null){ // null 이 아니라면 로그인 한 사용자
-            throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
-                    HttpStatus.UNAUTHORIZED);
-        }
+
         System.out.println("✳️ 자 인증검사 통과 했고, type :"+ type);
 
-        // 페이지 처리를 하기 위한 데이터
-        // 전체 레코드 수가 필요하다. 히스토리 이력이 10
-        // 한 페이지당 보여줄 객수는 1라고 가정 한다면
-        // 10개 페이지가 생성된다. ---> 5페이지(2개씩 보여줄 경우) [3 3 3 1 (만약 3개씩 보여줄 경우)]
-        // 전체 레코드 수를 가져와야 하고,
-        // 토탈 페이지 수를 계산 해야 한다.
-        int totalRecords = accountService.countHistoryByAccountAndType(type, accountId);
-        log.info("ℹ️ totalRecords 전체 레코드 수 계산 " + totalRecords);
 
-        // 설정에 맞는 전체 페이지 수를 계산해야 한다.
-        // int totalPages = 0; // paging 을 계산하는 수식이 들어옴
-
-        int totalPages = (int) Math.ceil((double) totalRecords/size);
-        log.info("🅿️ totalPages 전체 페이지 수 계산 " + totalPages);
 
         // 유효성 검사
         List<String> vaildTypes = Arrays.asList("all", "deposit", "withdrawal");
@@ -333,7 +261,21 @@ public class AccountController {
         if(!vaildTypes.contains(type)){
             throw new DataDeliveryException("유효하지 않은 접근입니다.", HttpStatus.BAD_REQUEST);
         } // 의도하지 않은 url 접근 시 -> 접근 못 하게 하는 유효성 검사
+        // 페이지 처리를 하기 위한 데이터
+        // 전체 레코드 수가 필요하다. 히스토리 이력이 10
+        // 한 페이지당 보여줄 객수는 1라고 가정 한다면
+        // 10개 페이지가 생성된다. ---> 5페이지(2개씩 보여줄 경우) [3 3 3 1 (만약 3개씩 보여줄 경우)]
+        // 전체 레코드 수를 가져와야 하고,
+        // 토탈 페이지 수를 계산 해야 한다.
+        int totalRecords = accountService.countHistoryByAccountAndType(type, accountId, page, size);
+        log.info("ℹ️ totalRecords 전체 레코드 수 계산 " + totalRecords);
 
+        // 설정에 맞는 전체 페이지 수를 계산해야 한다.
+        //int totalPages = 0; // paging 을 계산하는 수식이 들어옴
+
+        int totalPages = (int) Math.ceil((double) totalRecords/size);
+
+        log.info("🅿️ totalPages 전체 페이지 수 계산 " + totalPages);
         // 화면을 구성하기 위한 필요한 데이터
         // 소유자 이름 -- account_tb (사용자 하나의 계좌번호가 필요)
         // 해당 계좌 번호 -- account_tb

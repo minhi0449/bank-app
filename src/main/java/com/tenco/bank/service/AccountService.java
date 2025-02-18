@@ -268,6 +268,7 @@ public class AccountService {
      * @return
      */
     public Account readAccountId(Integer accountId){
+        log.info("🧤단일 계좌 조회 기능 + readAccountId()");
         Account account = accountRepository.findByAccountId(accountId);
         if(accountId == null){
             throw new DataDeliveryException(Define.NOT_EXIST_ACCOUNT, HttpStatus.BAD_REQUEST);
@@ -299,7 +300,8 @@ public class AccountService {
         // 지역 변수 선언
         List<HistoryAccountDTO> list = new ArrayList<>();// 자료 구조 부터 만들게욧@!
         // 1단계 limit , offset 몇 개까지 나와라, 어디서 부터 어디까지
-        list = historyRepository.findByAccountIdAndTypeOfHistory(type, accountId, page, size); // 페이징 처리 없이 전체 페이지 들고 오는 거
+        list = historyRepository.findByAccountIdAndTypeOfHistory(type, accountId, limit, offset); // 페이징 처리 없이 전체 페이지 들고 오는 거
+        log.info("단일 계좌 거래 내역 조회 list : " + list);
 
         return list;
     }
@@ -311,8 +313,9 @@ public class AccountService {
      * @param accountId
      * @return int
      */
-    public int countHistoryByAccountAndType(String type, Integer accountId) {
+    public int countHistoryByAccountAndType(String type, Integer accountId, int page, int size) {
+        log.info("0️⃣ 페이징 처리 하는 메서드 countHistory~ ");
 
-        return historyRepository.countHistoryAccountIdAndType(type, accountId);
+        return historyRepository.countHistoryAccountIdAndType(type, accountId, page, size);
     }
 }
