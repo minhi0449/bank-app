@@ -29,7 +29,9 @@ public interface HistoryRepository {
     public List<HistoryAccountDTO>
     findByAccountIdAndTypeOfHistory(
             @Param("type") String type,
-            @Param("accountId") Integer accountId );
+            @Param("accountId") Integer accountId,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
 
     // Map, 객체, 원시 타입으로 선언하는 방법이 있다.
     public int countHistoryAccountIdAndType(@Param("type") String type,

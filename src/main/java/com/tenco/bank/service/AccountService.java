@@ -281,11 +281,25 @@ public class AccountService {
      * @param accountId (pk)
      * @return 입금, 출금, 입출금 거래내역 (3가지 타입으로 반환 처리)
      */
-    public List<HistoryAccountDTO> readHistoryByAccountId(String type, Integer accountId) {
+    public List<HistoryAccountDTO> readHistoryByAccountId(
+            String type, Integer accountId, int page, int size) {
+        log.info("⁉️ 안녕 여기는 서비스 + readHistoryByAccountId() ");
+        // controller 에서 page, size 받을 것임
+        // limit 변수 , offset 변수
+        int limit = size;
+        // 3번째 페이지를 보여주기
+        // limit 2, offset ??
+        // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+        int offset = (page - 1) * size; // 넘겨받았던 사이즈를 곱하기?
+
+        // 현재 페이지 1이라고 가정을 하면
+        // offset 는 0번부터 시작하니까
+        // (현재 페이지 1 * size)
+
         // 지역 변수 선언
         List<HistoryAccountDTO> list = new ArrayList<>();// 자료 구조 부터 만들게욧@!
         // 1단계 limit , offset 몇 개까지 나와라, 어디서 부터 어디까지
-        list = historyRepository.findByAccountIdAndTypeOfHistory(type, accountId); // 페이징 처리 없이 전체 페이지 들고 오는 거
+        list = historyRepository.findByAccountIdAndTypeOfHistory(type, accountId, page, size); // 페이징 처리 없이 전체 페이지 들고 오는 거
 
         return list;
     }
