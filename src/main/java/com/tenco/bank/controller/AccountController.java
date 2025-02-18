@@ -1,9 +1,6 @@
 package com.tenco.bank.controller;
 
-import com.tenco.bank.dto.AccountSaveDTO;
-import com.tenco.bank.dto.DepositDTO;
-import com.tenco.bank.dto.TransferDTO;
-import com.tenco.bank.dto.WithdrawalDTO;
+import com.tenco.bank.dto.*;
 import com.tenco.bank.handler.exception.DataDeliveryException;
 import com.tenco.bank.handler.exception.UnAuthorizedException;
 import com.tenco.bank.repository.model.Account;
@@ -12,6 +9,7 @@ import com.tenco.bank.service.AccountService;
 import com.tenco.bank.utils.Define;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -28,11 +26,13 @@ import java.util.List;
  * 날짜 : 2025.02.13 (목)
  * 이름 : 김민희
  * 내용 :
+ *
+ * 이력 : 2025.02.18 (화) - 페이징 처리
  */
 
 @RequestMapping("/account")
 @Controller
-
+@Log4j2
 public class AccountController {
 
     @Autowired
@@ -117,7 +117,7 @@ public class AccountController {
      */
     @GetMapping({ "/list", "/" })
     public String listPage(Model model) {
-
+        log.info("🆗 여기가 계좌 목록 페이지 - listPage()");
         // 1.인증 검사가 필요(account 전체 필요)
         User principal = (User) session.getAttribute("principal");
         if (principal == null) {
@@ -139,7 +139,7 @@ public class AccountController {
     // 출금하기
     @GetMapping("/withdrawal")
     public String withdrawalPage(){
-
+        log.info("여기는 출금하기 페이지 컨트롤러 오바 + withdrawalPage() ");
         User principal = (User) session.getAttribute(Define.PRINCIPAL);
         // 매번 작성하기 좀 그러니까 인증 처리를 어디서 진행했는지 여쭤보셨음
         // filter 에서 진행해도 되고, 인터셉터에서 진행해도 됨
@@ -153,7 +153,7 @@ public class AccountController {
     //
     @PostMapping("/withdrawal")
     public String withdrawalProc(WithdrawalDTO dto) {
-
+        log.info("☢️ 호호 withdrawalProc() 컨트롤러 ");
         User principal = (User) session.getAttribute(Define.PRINCIPAL);
         if(principal == null) {
             throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN, HttpStatus.UNAUTHORIZED);
@@ -298,7 +298,10 @@ public class AccountController {
      */
     @GetMapping("/detail/{accountId}")
     public String detailPage(@PathVariable(name = "accountId") Integer accountId,
-                            @RequestParam(required = false, name = "type") String type, Model model){
+                            @RequestParam(required = false, name = "type") String type,
+                             @RequestParam(name="page", defaultValue = "1") int page,
+                             @RequestParam(name="size", defaultValue = "1") int size, // 한 페이지에 몇 개씩 보고자 하는 거
+                             Model model){
         System.out.println("💰안녕 여기 - 계좌 상세 컨트롤러 : detailPage()");
         // 인증 검사
         User principal = (User) session.getAttribute(Define.PRINCIPAL);
@@ -307,9 +310,26 @@ public class AccountController {
             throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN,
                     HttpStatus.UNAUTHORIZED);
         }
+        System.out.println("✳️ 자 인증검사 통과 했고, type :"+ type);
+
+        // 페이지 처리를 하기 위한 데이터
+        // 전체 레코드 수가 필요하다. 히스토리 이력이 10
+        // 한 페이지당 보여줄 객수는 1라고 가정 한다면
+        // 10개 페이지가 생성된다. ---> 5페이지(2개씩 보여줄 경우) [3 3 3 1 (만약 3개씩 보여줄 경우)]
+        // 전체 레코드 수를 가져와야 하고,
+        // 토탈 페이지 수를 계산 해야 한다.
+        int totalRecords = accountService.countHistoryByAccountAndType(type, accountId);
+        log.info("ℹ️ totalRecords 전체 레코드 수 계산 " + totalRecords);
+
+        // 설정에 맞는 전체 페이지 수를 계산해야 한다.
+        // int totalPages = 0; // paging 을 계산하는 수식이 들어옴
+
+        int totalPages = (int) Math.ceil((double) totalRecords/size);
+        log.info("🅿️ totalPages 전체 페이지 수 계산 " + totalPages);
 
         // 유효성 검사
         List<String> vaildTypes = Arrays.asList("all", "deposit", "withdrawal");
+        log.info("🅰️ 타입 확인 - vaildTypes() "+ vaildTypes);
         if(!vaildTypes.contains(type)){
             throw new DataDeliveryException("유효하지 않은 접근입니다.", HttpStatus.BAD_REQUEST);
         } // 의도하지 않은 url 접근 시 -> 접근 못 하게 하는 유효성 검사
@@ -319,13 +339,30 @@ public class AccountController {
         // 해당 계좌 번호 -- account_tb
         // 거래 내역 추출 -- history_tb
         Account account = accountService.readAccountId(accountId);
+        log.info("🆙 account "+ account);
         // 동적 쿼리를 위해 type 을 먼저 만들어주고, accountId 를 던져 줄거임
         // readHistoryByAccountId(type);
-        accountService.readHistoryByAccountId(type, accountId);
+        // 데이터 타입 역시나 List
+        List<HistoryAccountDTO> historyList = accountService.readHistoryByAccountId(type, accountId, page, size);
+        log.info(" ❗️historyList {}",historyList);
 
-        // view resolve (뷰 리졸브) --> jsp 데이터르 내려줄 때,
+        // view resolve (뷰 리졸브) --> jsp 데이터를 내려줄 때,
         // Model
         model.addAttribute("account", account);
+        System.out.println("1️⃣ account ::"+account);
+        model.addAttribute("historyList", historyList);
+        System.out.println("2️⃣ historyList ::"+historyList);
+        model.addAttribute("currentPage", page);
+        System.out.println("3️⃣ currentPage ::"+page);
+        model.addAttribute("totalPages", totalPages);
+        System.out.println("4️⃣ totalPages ::"+totalPages);
+        // 이거 안 내려주면 2페이지 안 넘어감
+        model.addAttribute("type", type);
+        System.out.println("️5️⃣ type ::"+type);
+        model.addAttribute("size", size);
+        System.out.println("6️⃣ size ::"+size);
+
+
 
         return "/account/detail";
     }

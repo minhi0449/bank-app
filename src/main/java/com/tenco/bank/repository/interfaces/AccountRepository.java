@@ -34,8 +34,7 @@ public interface AccountRepository {
 
     // Account PK로 조회하는 기능 (단일 계좌 조회 기능)
     public Account findByAccountId(Integer accountId);
-    public List<HistoryAccountDTO>
-    findByAccountIdAndTypeOfHistory(
-            @Param("type") String type,
-            @Param("accountId") Integer accountId );
+
 }
+
+

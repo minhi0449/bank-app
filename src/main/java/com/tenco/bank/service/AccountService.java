@@ -1,8 +1,6 @@
 package com.tenco.bank.service;
 
-import com.tenco.bank.dto.DepositDTO;
-import com.tenco.bank.dto.TransferDTO;
-import com.tenco.bank.dto.WithdrawalDTO;
+import com.tenco.bank.dto.*;
 import com.tenco.bank.repository.interfaces.HistoryRepository;
 import com.tenco.bank.repository.model.Account;
 import com.tenco.bank.repository.model.History;
@@ -14,11 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tenco.bank.dto.AccountSaveDTO;
 import com.tenco.bank.handler.exception.DataDeliveryException;
 import com.tenco.bank.handler.exception.RedirectException;
 import com.tenco.bank.repository.interfaces.AccountRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -284,8 +282,39 @@ public class AccountService {
      * @param accountId (pk)
      * @return 입금, 출금, 입출금 거래내역 (3가지 타입으로 반환 처리)
      */
-    public void readHistoryByAccountId(String type, Integer accountId) {
+    public List<HistoryAccountDTO> readHistoryByAccountId(
+            String type, Integer accountId, int page, int size) {
+        log.info("⁉️ 안녕 여기는 서비스 + readHistoryByAccountId() ");
+        // controller 에서 page, size 받을 것임
+        // limit 변수 , offset 변수
+        int limit = size;
+        // 3번째 페이지를 보여주기
+        // limit 2, offset ??
+        // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+        int offset = (page - 1) * size; // 넘겨받았던 사이즈를 곱하기?
 
+        // 현재 페이지 1이라고 가정을 하면
+        // offset 는 0번부터 시작하니까
+        // (현재 페이지 1 * size)
+
+        // 지역 변수 선언
+        List<HistoryAccountDTO> list = new ArrayList<>();// 자료 구조 부터 만들게욧@!
+        // 1단계 limit , offset 몇 개까지 나와라, 어디서 부터 어디까지
+        list = historyRepository.findByAccountIdAndTypeOfHistory(type, accountId, page, size); // 페이징 처리 없이 전체 페이지 들고 오는 거
+
+        return list;
+    }
+
+    /**
+     * 페이징 처리 하는 메서드
+     * 단일 해당 계좌와 거래 유형에 따른 전체 레코드 수를 반환하는 메서드
+     * @param type
+     * @param accountId
+     * @return int
+     */
+    public int countHistoryByAccountAndType(String type, Integer accountId) {
+
+        return historyRepository.countHistoryAccountIdAndType(type, accountId);
     }
 
 }
