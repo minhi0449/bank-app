@@ -10,9 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+// 2025.02.19 (수) - 비밀번호 암호화 코드 추가
 
 @Service
 @RequiredArgsConstructor // 리콰이얼드 아그스 컨스트럭쳐
@@ -21,6 +24,7 @@ public class UserService{
     // final : 불변객체 -> 한 번 객체로 사용되면
     // 이러한 멤버가 있다면 또 작성해야 함
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // 생성자 의존 주입 DI --> UserRepository 자동 주입
 //    public UserService(UserRepository userRepository) {
@@ -39,6 +43,10 @@ public class UserService{
         // 보안 및 사용자 경험 측면에서 민감한 정보를 노출하지 않도록 합니다.
         int result = 0;
         try {
+            // 우리가 알 수 없는 비밀번호 암호화 해서 해주는 코드
+            String hashPwd =  passwordEncoder.encode(dto.getPassword());
+            dto.setPassword(hashPwd); // 상태 변경
+
             result = userRepository.insert(dto.toUser());
             // insert 에 User 라는 모델을 받아야 함
             // SignUpDTO 에 toUser 라는 거 만들어 놨음
@@ -64,7 +72,15 @@ public class UserService{
         // 암호화 -> 복호화도 수업
         User user = null;
         try {
-            user = userRepository.findByUsernameAndPassword(dto.getUsername(), dto.getPassword());
+            // 한 번에 아이디, 비밀번호 넣고 있음
+
+
+            // user = userRepository.findByUsernameAndPassword(dto.getUsername(), dto.getPassword());
+            // 이름만 있는지 없는지 먼저 확인
+
+            user = userRepository.findByUsername(dto.getUsername());
+
+
             // insert 에 User 라는 모델을 받아야 함
             // SignUpDTO 에 toUser 라는 거 만들어 놨음
             // 여기서 예외 처리를 하면 상위 catch 블록에서 예외를 잡는다.
@@ -76,9 +92,19 @@ public class UserService{
             // 그 외 예외 처리 - 페이지 이동 처리 RedirectException(리다이렉션 에러페이지 보는 페이지로 이동시키기)
             throw new RedirectException("알 수 없는 오류" , HttpStatus.SERVICE_UNAVAILABLE);
         }
+
+        // optional 사용해도 되고, 코드 일관성있게만 작성하기만 하면 됨
         if (user == null) {
             throw new DataDeliveryException("아이디 또는 비밀번호가 맞지 않습니다.", HttpStatus.BAD_REQUEST);
         }
+
+        // 12345 ==
+        boolean isPwdMatched = passwordEncoder.matches(dto.getPassword(), user.getPassword());
+
+        if(isPwdMatched == false){
+            throw new DataDeliveryException("비밀번호가 잘못되었습니다.", HttpStatus.BAD_REQUEST);
+        }
+
 
         return user;
     }

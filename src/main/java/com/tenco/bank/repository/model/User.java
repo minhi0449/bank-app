@@ -24,6 +24,7 @@ public class User {
     private String fullname;
     private Timestamp createdAt;
     private String uploadFileName; // 프로필 이미지 이름
+    private String originFileName;
 
     public String setUpUserImage(){
         return uploadFileName == null ?

@@ -4,7 +4,10 @@ import com.tenco.bank.handler.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.ibatis.plugin.Interceptor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -35,6 +38,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     }
 
+    // Bean 객체
+    @Bean // IoC 대상
+    PasswordEncoder passwordEncoder(){
+        return  new BCryptPasswordEncoder();
+    }
 
 
 }
