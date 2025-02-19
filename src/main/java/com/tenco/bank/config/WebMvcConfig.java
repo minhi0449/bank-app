@@ -16,6 +16,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
     날짜 : 2025.02.18 (화)
     이름 : 김민희
     내용 : AuthInterceptor를 WebMvcConfig에 등록하여 특정 경로에 인터셉터 적용
+
  */
 
 @Log4j2
@@ -41,7 +42,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     // Bean 객체
     @Bean // IoC 대상
     PasswordEncoder passwordEncoder(){
+
         log.info("⏹️ 여기 패스워드 인코더");
+
         return  new BCryptPasswordEncoder();
     }
 

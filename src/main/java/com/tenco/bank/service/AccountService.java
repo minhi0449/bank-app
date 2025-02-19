@@ -259,6 +259,7 @@ public class AccountService {
 
     }
 
+
     // 단일 계좌 조회 기능
 
     /**
@@ -318,4 +319,5 @@ public class AccountService {
 
         return historyRepository.countHistoryAccountIdAndType(type, accountId, page, size);
     }
+
 }
