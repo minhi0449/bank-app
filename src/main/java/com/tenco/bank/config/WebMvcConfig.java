@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /*
@@ -41,9 +42,20 @@ public class WebMvcConfig implements WebMvcConfigurer {
     // Bean 객체
     @Bean // IoC 대상
     PasswordEncoder passwordEncoder(){
+
+        log.info("⏹️ 여기 패스워드 인코더");
+
         return  new BCryptPasswordEncoder();
     }
 
-
+    // 프로젝트에 사용할 가상 경로 정의 -> 페이지 소스 보기(가상 경로) (/immages/uploads) // code 상에서 보여지는 건 이거지만
+    // 실제 파일의 경로 file: // C: // spring_work // upload\ // 실제 컴퓨터에서 저장되는 위치는 이거 임
+    // file:///Users/kimminimanimu/upload/57bf33bb-76a0-4716-be62-a4a79b998ea8_kkobugi.jpg
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        log.info("⏏️ 여기 업로드 파일 경로 ");
+        registry.addResourceHandler("/images/uploads/**")
+                .addResourceLocations("file:///Users/kimminimanimu/upload/");
+    }
 }
 

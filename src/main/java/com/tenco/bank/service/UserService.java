@@ -6,14 +6,25 @@ import com.tenco.bank.handler.exception.DataDeliveryException;
 import com.tenco.bank.handler.exception.RedirectException;
 import com.tenco.bank.repository.interfaces.UserRepository;
 import com.tenco.bank.repository.model.User;
+import com.tenco.bank.utils.Define;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+
+import static org.apache.logging.log4j.ThreadContext.isEmpty;
+
+
+// 2025.02.19 (수) - 비밀번호 암호화 코드 추가
 
 // 2025.02.19 (수) - 비밀번호 암호화 코드 추가
 
@@ -25,6 +36,12 @@ public class UserService{
     // 이러한 멤버가 있다면 또 작성해야 함
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+
+    // 초기 파라미터 들고 오는 방법
+    @Value("${file.upload-dir}")
+    private String uploadDir; // C:\\work_spring\\upload/  매핑 됨
+
 
     // 생성자 의존 주입 DI --> UserRepository 자동 주입
 //    public UserService(UserRepository userRepository) {
@@ -42,6 +59,20 @@ public class UserService{
         // Http 응답으로 클라이언트에게 전달할 오류 메시지는 최소한으로 유지하고,
         // 보안 및 사용자 경험 측면에서 민감한 정보를 노출하지 않도록 합니다.
         int result = 0;
+
+        // 회원가입 시 insert 처리 O/U
+        System.out.println("▶️ getCustomFile() 파일 이름 들어왔나? "+dto.getCustomFile());
+        if(dto.getCustomFile() != null && !dto.getCustomFile().isEmpty()){ // 파일이 있다면?
+            // 업로드 로직 구현
+            String[] fileNames = uploadFile(dto.getCustomFile());
+            dto.setOriginFileName(fileNames[0]);
+            dto.setUploadFileName(fileNames[1]);
+
+            // 파일 업로드 로직 구현
+            // System.out.println(dto.getCustomFile().getName());
+            // System.out.println(dto.getCustomFile().getOriginalFilename()); // 파일의 진짜 이름? 으로 불러줘야 함
+        }
+
         try {
             // 우리가 알 수 없는 비밀번호 암호화 해서 해주는 코드
             String hashPwd =  passwordEncoder.encode(dto.getPassword());
@@ -108,5 +139,56 @@ public class UserService{
 
         return user;
     }
+
+    private  String[] uploadFile(MultipartFile mFile){
+        // 방어적 코드 작성
+        if(mFile.getSize() > Define.MAX_FILE_SIZE){
+            throw new DataDeliveryException("파일 크기는 20MB 이상 클 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        // 파일을 만들기 위해서
+        // 1. 파일 경로를 설정해 준다.
+        // String saveDirectory = uploadDir; 윈도우
+        String saveDirectory = new File(uploadDir).getAbsolutePath();
+
+        // 폴더 존재 여부 코드를 작성해 보자.
+        File uploadFolder = new File(saveDirectory);
+        System.out.println("🆙 폴더 존재 여부 + uploadFolder"+ uploadFolder);
+
+        if(!uploadFolder.exists()){ // 만약에 존재하지 않는다면?
+            boolean mkdirsResult = uploadFolder.mkdir();
+            if(!mkdirsResult){
+                throw new DataDeliveryException("파일 업로드 폴더를 생성할 수 없습니다.",
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        // 리눅스, MacOS 맞춰서 절대 경로를 맞춰야 한다.
+
+
+        // 2. 파일명이 중복되면 덮어쓰기 됩니다. 예방
+        // 2.1 파일 이름을 생성한다. (가능한 절대 중복되지 않을 이름으로 생성)  + 나중에 추출해서 쓸 수 있도록 구분자 값 "_" 추가
+        // 2.1 = adfsdfafsd1011_a.png
+        String uploadFileName = UUID.randomUUID() + "_" + mFile.getOriginalFilename();
+        // String uploadPath = saveDirectory + / 파일명을 적어 줄건데
+        // 3. 파일명을 포함한 전체 경로를 만들자. --> 파일 전체 경로 + 새로 생성한 파일명 --> 문자열로 만들어짐
+        String uploadPath = saveDirectory + File.separator + uploadFileName;
+        // TODO : 파일 경로 console 출력 x
+        System.out.println("✳️ uploadPath" + uploadPath);
+
+        File destination = new File(uploadPath);
+        System.out.println("ℹ️ destination"+ destination);
+
+        try {
+
+            mFile.transferTo(destination); // 컴파일 시점 오류 발생할 수 있음
+        }catch (IOException e){
+            e.printStackTrace();
+            throw new DataDeliveryException("파일 업로드 중 오류가 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 파일 까지 생성 --> 원본 사진 명, 새로 생성한 파일명
+        return new String[] {mFile.getOriginalFilename(), uploadFileName} ;
+    }
+
 
 }

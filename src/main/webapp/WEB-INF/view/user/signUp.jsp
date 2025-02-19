@@ -19,8 +19,8 @@
 			<label for="fullname">fullname:</label> <input type="text" class="form-control" placeholder="Enter fullname" id="fullname" name="fullname" value="바람검객">
 		</div>
 		<div class="custom-file">
-			<input type="file" class="custom-file-input" id="customFile" name="mFile">
-			<label class="custom-file-label"  for="customFile">Choose file</label>
+			<input type="file" class="custom-file-input" id="customFile" name="customFile">
+			<label class="custom-file-label"  for="customFile">파일 선택 🔎</label>
 		</div>
 		<br>
 		<div class="d-flex justify-content-end">
