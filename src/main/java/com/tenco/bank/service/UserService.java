@@ -39,13 +39,6 @@ public class UserService{
     @Value("${file.upload-dir}")
     private String uploadDir; // C:\\work_spring\\upload/  매핑 됨
 
-
-    // 생성자 의존 주입 DI --> UserRepository 자동 주입
-//    public UserService(UserRepository userRepository) {
-//        this.userRepository = userRepository;
-//    }
-
-
     // 회원 가입 처리
     // 예외 처리
     // DB 에서 연결이나 쿼리 실행, 제약 사항 위한 같은
@@ -94,49 +87,36 @@ public class UserService{
         }
     }
 
-    // session 에 User 등록하기
+
     public User readUser(SignInDTO dto) {
-        // Repository Model 의 녀석을 땡겨오는 거임
-        // 암호화 -> 복호화도 수업
+        // 사용자를 찾을 변수 초기화
         User user = null;
+
         try {
-            // 한 번에 아이디, 비밀번호 넣고 있음
-
-
-            // user = userRepository.findByUsernameAndPassword(dto.getUsername(), dto.getPassword());
-            // 이름만 있는지 없는지 먼저 확인
-
+            // 아이디로 사용자를 찾기
             user = userRepository.findByUsername(dto.getUsername());
-
-
-            // insert 에 User 라는 모델을 받아야 함
-            // SignUpDTO 에 toUser 라는 거 만들어 놨음
-            // 여기서 예외 처리를 하면 상위 catch 블록에서 예외를 잡는다.
-        } catch (DataAccessException e) { // 데이터베이스가 꺼져있거나,
-            // DataAccessException는 Spring의 데이터 액세스 예외 클래스로,
-            // 데이터베이스 연결이나 쿼리 실행과 관련된 문제를 처리합니다.
+        } catch (DataAccessException e) { // 데이터베이스가 꺼져있거나, 등등의 이유
+            // 데이터 저장소에서 오류 발생 시 예외 처리
             throw new DataDeliveryException("잘못된 처리 입니다", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            // 그 외 예외 처리 - 페이지 이동 처리 RedirectException(리다이렉션 에러페이지 보는 페이지로 이동시키기)
             throw new RedirectException("알 수 없는 오류" , HttpStatus.SERVICE_UNAVAILABLE);
         }
-
-        // optional 사용해도 되고, 코드 일관성있게만 작성하기만 하면 됨
+        // 사용자가 없으면 로그인 실패
         if (user == null) {
             throw new DataDeliveryException("아이디 또는 비밀번호가 맞지 않습니다.", HttpStatus.BAD_REQUEST);
         }
-
-        // 12345 ==
+        // 비밀번호가 맞는지 확인
         boolean isPwdMatched = passwordEncoder.matches(dto.getPassword(), user.getPassword());
 
+        // 비밀번호가 틀리면 오류 발생
         if(isPwdMatched == false){
             throw new DataDeliveryException("비밀번호가 잘못되었습니다.", HttpStatus.BAD_REQUEST);
         }
-
-
+        // 사용자를 반환 (로그인 성공)
         return user;
     }
 
+    // *** 파일 업로드 기능 ***
     private  String[] uploadFile(MultipartFile mFile){
         // 방어적 코드 작성
         if(mFile.getSize() > Define.MAX_FILE_SIZE){
@@ -160,7 +140,6 @@ public class UserService{
         }
 
         // 리눅스, MacOS 맞춰서 절대 경로를 맞춰야 한다.
-
 
         // 2. 파일명이 중복되면 덮어쓰기 됩니다. 예방
         // 2.1 파일 이름을 생성한다. (가능한 절대 중복되지 않을 이름으로 생성)  + 나중에 추출해서 쓸 수 있도록 구분자 값 "_" 추가
@@ -187,5 +166,10 @@ public class UserService{
         return new String[] {mFile.getOriginalFilename(), uploadFileName} ;
     }
 
+    // kakao 로그인
+    public User searchUsername(String username) {
+        return userRepository.findByUsername(username);
 
+
+    }
 }
