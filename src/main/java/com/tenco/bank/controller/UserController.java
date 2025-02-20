@@ -236,13 +236,12 @@ public class UserController {
             userService.createUser(signUpDTO); // 회원가입 처리
             user = userService.searchUsername(signUpDTO.getUsername()); // 다시 조회하면? 이제 signDTO 에 들어갔으니까 조회되겠지
         }
-
+      
         // 세션에 정보 저장
         session.setAttribute(Define.PRINCIPAL,user); // 방금 뽑아줬던 user 를 뽑아줘야 한다.
         // session 정보를 저장했는데 왜 로그인을 다시 하라고 했을까?
-
+      
         // 소셜 로그인 , 회원가입 한 시점에 세션 정보를 저장 -> 해야 하고 , if(user == null) 처리를 앞에서 처리
-
         // 서비스 호출해서 사용자 (username)
         // 있으면 최초 사용자 x, 없으면 최초 사용자 --> insert 처리 하기
         return "redirect:/account/list";

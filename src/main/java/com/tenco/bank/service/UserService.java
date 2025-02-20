@@ -26,6 +26,8 @@ import static org.apache.logging.log4j.ThreadContext.isEmpty;
 
 // 2025.02.19 (수) - 비밀번호 암호화 코드 추가
 
+// 2025.02.19 (수) - 비밀번호 암호화 코드 추가
+
 @Service
 @RequiredArgsConstructor // 리콰이얼드 아그스 컨스트럭쳐
 public class UserService{
@@ -34,6 +36,7 @@ public class UserService{
     // 이러한 멤버가 있다면 또 작성해야 함
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
 
     // 초기 파라미터 들고 오는 방법
     @Value("${file.upload-dir}")
