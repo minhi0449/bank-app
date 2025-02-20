@@ -221,20 +221,27 @@ public class UserController {
         SignUpDTO signUpDTO = SignUpDTO
                 .builder()
                 // 기존 회원과 , 소셜 로그인 네임이
-                // .username("OAuth_" + KakaoProfile.getProperties().getNickname())
-                // .fullname("OAuth_" + KakaoProfile.getProperties().getNickname())
+                .username("OAuth_" + kakaoProfile.getProperties().getNickname())
+                .fullname("OAuth_" + kakaoProfile.getProperties().getNickname())
                 .password(tencoKey) // 미리 정의된 더미 비밀번호
                 .build();
 
         User user = userService.searchUsername(signUpDTO.getUsername());
+        // ⭐️ 문제의 원인
+        // --> 최초 소셜 로그인 시에 회원 가입까지 정상 동작
+        // --> 자동 로그인 처리 (세션에 유저 정보 등록 실패 --> 다시 로그인 하라)
+        // --> 최초 접근 시라도 자동 로그인 처리 해야 한다.
         if (user == null){
             // 한 번도 온 적이 없으니까
             userService.createUser(signUpDTO); // 회원가입 처리
+            user = userService.searchUsername(signUpDTO.getUsername()); // 다시 조회하면? 이제 signDTO 에 들어갔으니까 조회되겠지
         }
-
+      
         // 세션에 정보 저장
         session.setAttribute(Define.PRINCIPAL,user); // 방금 뽑아줬던 user 를 뽑아줘야 한다.
-
+        // session 정보를 저장했는데 왜 로그인을 다시 하라고 했을까?
+      
+        // 소셜 로그인 , 회원가입 한 시점에 세션 정보를 저장 -> 해야 하고 , if(user == null) 처리를 앞에서 처리
         // 서비스 호출해서 사용자 (username)
         // 있으면 최초 사용자 x, 없으면 최초 사용자 --> insert 처리 하기
         return "redirect:/account/list";
